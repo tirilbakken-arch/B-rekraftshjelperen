@@ -1008,7 +1008,7 @@
       <button type="button" class="textbtn" data-importer>Åpne skjema fra fil</button>
       <p class="fil-status" role="status" aria-live="polite"></p>
     </div>
-    <input type="file" id="importFil" accept=".json,application/json" hidden>
+    <input type="file" id="importFil" accept=".html,.htm,.json,text/html,application/json" hidden>
     <details class="alle-skjemaer">
       <summary>Se alle skjemaer og verktøy</summary>
 
@@ -1078,7 +1078,7 @@
     <div class="fil-deling" id="filDelingTool">
       <div class="fil-deling-tekst">
         <strong>Jobbe sammen med andre?</strong>
-        <span>Last ned skjemaet som fil og send det til en kollega. Kollegaen åpner filen i Bærekrafthjelperen og fortsetter der du slapp.</span>
+        <span>Last ned skjemaet som fil og send det til en kollega. Kollegaen dobbeltklikker på filen, så åpnes skjemaet i Bærekrafthjelperen med svarene dine, og hun kan fortsette der du slapp.</span>
       </div>
       <div class="fil-deling-knapper">
         <button type="button" class="primarybtn" id="eksporterBtn">Last ned skjema som fil</button>
@@ -3648,20 +3648,37 @@ function eksporterSkjema(id){
   const tittel = sak && (sak.tittel || "").trim();
   const dato = new Date().toISOString().slice(0, 10);
   const rent = (t) => t.replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, " ").trim();
-  const filnavn = rent("Bærekrafthjelperen – " + meta.name + (tittel ? " – " + rent(tittel).slice(0, 50) : "") + " – " + dato) + ".json";
-  const blob = new Blob([JSON.stringify(pakke, null, 2)], { type: "application/json" });
+  const filnavn = rent("Bærekrafthjelperen – " + meta.name + (tittel ? " – " + rent(tittel).slice(0, 50) : "") + " – " + dato) + ".html";
+  const json = JSON.stringify(pakke);
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  const side = (location.protocol === "http:" || location.protocol === "https:") ? location.origin + location.pathname : "https://www.xn--brekrafthjelperen-rrb.no/";
+  const lenke = side + "#importer=" + b64;
+  const escAttr = (t) => String(t).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  const html = '<!DOCTYPE html><html lang="no"><head><meta charset="utf-8"><title>' + escAttr(meta.name + (tittel ? " – " + tittel : "")) + '</title>'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<style>body{font-family:"Open Sans",Arial,sans-serif;max-width:640px;margin:80px auto;padding:0 24px;color:#000}h1{color:#00244E;font-size:1.6rem}a.knapp{display:inline-block;margin-top:12px;padding:12px 22px;background:#00244E;color:#fff;text-decoration:none;font-weight:600;border-radius:8px}</style></head><body>'
+    + '<h1>Åpner skjemaet i Bærekrafthjelperen …</h1>'
+    + '<p>' + escAttr(meta.name + (tittel ? ": " + tittel : "")) + '</p>'
+    + '<p>Hvis ingenting skjer, klikk på knappen:</p>'
+    + '<p><a class="knapp" href="' + escAttr(lenke) + '">Åpne skjemaet</a></p>'
+    + '<script type="application/json" id="baerekraft-skjema">' + json.replace(/</g, "\\u003c") + '<\/script>'
+    + '<script>location.replace(' + JSON.stringify(lenke) + ');<\/script>'
+    + '</body></html>';
+  const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url; a.download = filnavn;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
-  visFilStatus("Skjemaet er lastet ned som «" + filnavn + "». Send filen til den som skal jobbe videre.");
+  visFilStatus("Skjemaet er lastet ned som «" + filnavn + "». Send filen til den som skal jobbe videre. Den som får filen, dobbeltklikker på den, så åpnes skjemaet i Bærekrafthjelperen.");
 }
 function visFilStatus(tekst, feil){
   document.querySelectorAll(".fil-status").forEach(el => { el.textContent = tekst; el.classList.toggle("fil-feil", !!feil); });
 }
 function importerSkjemaTekst(tekst){
   let pakke;
+  const m = /<script type="application\/json" id="baerekraft-skjema">([\s\S]*?)<\/script>/.exec(tekst);
+  if (m) tekst = m[1];
   try { pakke = JSON.parse(tekst); } catch (e) { visFilStatus("Filen kunne ikke leses. Velg en fil som er lastet ned fra Bærekrafthjelperen.", true); return; }
   if (!pakke || pakke.format !== FIL_FORMAT || !pakke.skjema) { visFilStatus("Dette ser ikke ut som et skjema fra Bærekrafthjelperen.", true); return; }
   const id = pakke.skjema;
@@ -3700,6 +3717,14 @@ document.getElementById("importFil").addEventListener("change", (e) => {
   r.readAsText(f, "utf-8");
 });
 document.getElementById("eksporterBtn").addEventListener("click", () => eksporterSkjema(activeSkjemaId));
+window.addEventListener("load", () => {
+  const h = location.hash || "";
+  if (h.indexOf("#importer=") !== 0) return;
+  let tekst = "";
+  try { tekst = decodeURIComponent(escape(atob(decodeURIComponent(h.slice(10))))); } catch (e) { tekst = ""; }
+  try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* ignore */ }
+  if (tekst) setTimeout(() => importerSkjemaTekst(tekst), 50);
+});
 
 /* ---------- START PÅ NYTT / FORTSETT ---------- */
 function harLagretSvar(id){
