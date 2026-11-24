@@ -127,6 +127,7 @@
   .fil-deling{margin-top:32px;padding:20px 22px;background:#F3F5F8;border-left:4px solid var(--green-deep);display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;}
   .fil-deling-tekst{display:flex;flex-direction:column;gap:4px;max-width:60ch;font-size:.95rem;}
   .fil-deling-tekst strong{color:var(--green-deep);}
+  .fil-forbehold{font-size:.85rem;color:var(--text-soft);}
   .fil-deling-knapper{display:flex;flex-wrap:wrap;gap:10px;}
   .fil-status{flex-basis:100%;margin:0;font-size:.9rem;color:var(--green-deep);}
   .fil-status:empty{display:none;}
@@ -1079,6 +1080,7 @@
       <div class="fil-deling-tekst">
         <strong>Jobbe sammen med andre?</strong>
         <span>Last ned skjemaet som fil og send det til en kollega. Kollegaen dobbeltklikker på filen, så åpnes skjemaet i Bærekrafthjelperen med svarene dine, og hun kan fortsette der du slapp.</span>
+        <span class="fil-forbehold">Forutsetter at PC-en kan åpne html-filer. De åpnes vanligvis i nettleseren. Hvis det ikke går, kan kollegaen gå til Bærekrafthjelperen og bruke «Åpne skjema fra fil» i stedet.</span>
       </div>
       <div class="fil-deling-knapper">
         <button type="button" class="primarybtn" id="eksporterBtn">Last ned skjema som fil</button>
@@ -3670,7 +3672,7 @@ function eksporterSkjema(id){
   a.href = url; a.download = filnavn;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
-  visFilStatus("Skjemaet er lastet ned som «" + filnavn + "». Send filen til den som skal jobbe videre. Den som får filen, dobbeltklikker på den, så åpnes skjemaet i Bærekrafthjelperen.");
+  visFilStatus("Skjemaet er lastet ned som «" + filnavn + "». Send filen til den som skal jobbe videre. Den som får filen, dobbeltklikker på den, så åpnes skjemaet i Bærekrafthjelperen (forutsetter at PC-en kan åpne html-filer).");
 }
 function visFilStatus(tekst, feil){
   document.querySelectorAll(".fil-status").forEach(el => { el.textContent = tekst; el.classList.toggle("fil-feil", !!feil); });
