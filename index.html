@@ -118,6 +118,19 @@
   .kjoreregler li{margin-bottom:4px;}
   .krit-block{margin-top:16px;}
   .krit-block .kjoreregler{margin:0;padding:14px 16px 14px 36px;border-top:1px solid var(--line);}
+  .krit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 32px;padding:4px 16px 16px;border-top:1px solid var(--line);}
+  .krit-grid h4{margin:12px 0 0;font-size:.9rem;color:var(--green-deep);}
+  .krit-grid .kjoreregler{border-top:none;padding:6px 0 0 18px;font-size:.92rem;line-height:1.7;color:var(--text-soft);}
+  .krit-grid .krit-sporsmal{color:var(--text);}
+  .krit-note{grid-column:1 / -1;margin:4px 0 0;font-size:.85rem;color:var(--text-soft);}
+  @media (max-width:720px){.krit-grid{grid-template-columns:1fr;}}
+  .areal-hint{margin:8px 0 0;padding:10px 12px;background:#F3F5F8;font-size:.82rem;line-height:1.5;color:#1E2736;}
+  .areal-req{margin-top:6px;font-size:13px;color:#A10916;font-weight:600;}
+  .areal-pakrevd{font-weight:400;color:var(--text-soft);}
+  textarea.areal-mangler{border-color:var(--nei) !important;}
+  .areal-henv{grid-column:2;}
+  @media (max-width:720px){.areal-henv{grid-column:auto;}}
+  .areal-henv-input{padding:10px 12px;border:1px solid var(--line);border-radius:6px;font-size:.92rem;min-height:44px;width:100%;}
   .meta-line{margin-top:10px;font-size:.83rem;color:var(--text-soft);}
   .meta-line strong{color:var(--text);font-weight:600;}
   .section-intro{color:var(--text-soft);font-size:.95rem;max-width:70ch;}
@@ -1252,13 +1265,13 @@ const skjemaer = [
     desc: "På bakgrunn av kommunestyrets diskusjon om utfordringer og muligheter identifisert i kunnskapsgrunnlaget, nasjonale forventninger og den politiske plattformen prioriteres innsatsområder for valgperioden."
   },
   {
-    id: "arealdel",
+    id: "arealdel2",
     name: "Arealplanlegging",
     desc: "Skal bidra til å realisere målene i samfunnsdelen og følge opp samfunnsdelens arealstrategi."
   },
   {
-    id: "arealdel2",
-    name: "Arealplanlegging (alternativ)",
+    id: "arealdel",
+    name: "Arealplanlegging (forrige versjon)",
     desc: "Skal bidra til å realisere målene i samfunnsdelen og følge opp samfunnsdelens arealstrategi."
   },
   {
@@ -1321,8 +1334,30 @@ skjemaData["saksbehandling"] = {
   }))
 };
 
-// Alternativt arealplanleggingsskjema: samme struktur som Saksbehandling (ett valg per tema, langt skjema)
-skjemaData["arealdel2"] = Object.assign({}, skjemaData["saksbehandling"], { id: "arealdel2" });
+// Arealplanlegging (nytt skjema, nov. 2026): ett påvirkningsvalg per tema, med begrunnelse og henvisning.
+// Mål for temaet og spørsmål til planen per tema; samlet vurdering per dimensjon og på tvers.
+const AREAL_TEMA = {"Naturmangfold og økosystemer": {"kj": ["Unngå nedbygging av sårbare naturtyper og karbonrike arealer.", "Bidra til gode miljøforhold i og langs vassdrag", "Sørge for å opprettholde naturmangfold og økosystemer ved å se eksisterende og planlagt naturbruk i sammenheng."], "se": ["Bygger planen ned natur, og er fortetting eller andre plasseringer vurdert?", "Berøres viktige naturtyper, trua arter, myr eller annen karbonrik natur?", "Blir sammenhengende naturområder, vassdrag eller kantsoner brutt opp?"]}, "Natur, kultur og friluftsliv": {"kj": ["Anerkjenne og ivareta naturens betydning for kultur og identitet, spesielt for den samiske befolkningen.", "Beskytte naturlandskapets kulturelle, estetiske og rekreasjonsmessige verdi.", "Legge til rette for friluftsliv og naturopplevelser."], "se": ["Får folk bedre eller dårligere tilgang til friluftsområder og strandsonen?", "Berøres kulturminner, kulturmiljø eller verdifullt landskap?", "Påvirkes arealer for samisk kultur- og næringsutøvelse?"]}, "Matproduksjon og drikkevannskilder": {"kj": ["Bruk av naturressurser (som jord, skog, vann og marine ressurser) på en bærekraftig måte", "Ivareta matsikkerhet og vannforsyning", "Sikre jordvernet og reindriftens ressursgrunnlag"], "se": ["Bygges dyrka eller dyrkbar jord ned?", "Ligger planen i nedbørfeltet til en drikkevannskilde?", "Berøres beite- eller flyttleier for reindrift, eller fiske- og gyteområder?"]}, "Klimagassutslipp og energiforbruk": {"kj": ["Redusere kommunens direkte og indirekte klimagassutslipp", "Aktivt arbeid for klimaomstilling", "Fremme bruk av fornybar energi og energieffektivisering"], "se": ["Gir plasseringen kort vei til daglige gjøremål, kollektivtilbud og gang- og sykkelvei?", "Hvor mye parkering legger planen opp til?", "Gir riving, massetransport eller materialbruk store utslipp i anleggsfasen?"]}, "Forurensing": {"kj": ["Unngå vann- og grunnforurensing", "Unngå plastforurensning", "Sikre god luftkvalitet", "Sørge for at støynivå er under terskelverdier", "Sikre god avfalls- og avløpshåndtering"], "se": ["Blir boliger eller andre støyfølsomme formål utsatt for støy eller dårlig luft?", "Finnes det forurenset grunn i området, og er håndteringen avklart?", "Er avfallshåndtering og avløp løst?"]}, "Klimatilpasning": {"kj": ["Forberede seg på å håndtere fremtidige endringer i klima", "Prioritere naturbaserte løsninger for klimatilpasning", "Bli mer robust og motstandsdyktig i møte med et endra klima i framtiden (beredskap)"], "se": ["Er overvann håndtert med fordrøyning og trygge flomveier?", "Er området utsatt for flom, skred, stormflo eller havnivåstigning, også med framtidig klima?", "Bevares eller etableres grønnstruktur som kan ta opp vann?"]}, "Oppvekst, utdanning og arbeid": {"kj": ["Sikre kvalitet på og lik tilgang til barnehager, skoler og læring for alle barn og unge", "Sikre gode og trygge oppvekstmiljø for barn og unge gjennom å tilrettelegge for tverrfaglig samarbeid og iverksette tidlig innsats", "Legge til rette for (videre)utdanning og kompetanseheving for voksne", "Bidra til at alle har mulighet til å delta i arbeidslivet.", "Iverksette tiltak for å aktivt forebygge utenforskap."], "se": ["Har skole og barnehage kapasitet, og er avstanden akseptabel?", "Er skoleveien trygg?", "Er det nok lekeareal og uteområder for barn og unge nær boligene?"]}, "Helse": {"kj": ["Sikre forsvarlige helse- og omsorgstjenester for alle innbyggere i alle aldre", "Se utviklingen i helse- og omsorgstjenesten i sammenheng med boligplanlegging og kommunens langsiktige økonomi", "Tilrettelegge for samarbeid med frivillighet for å fremme folkehelse", "Styrke samarbeid mellom sektorer for å forebygge fysisk og psykisk uhelse", "Motvirke helseforskjeller og øke aktivitetsnivået for mennesker i forskjellige livsløp, sosiale grupper og kjønn.", "Sikre en tverrfaglig og tverrsektoriell tilnærming i alt folkehelsearbeid"], "se": ["Er det kort vei til helse- og velferdstjenester?", "Får boligene gode uteområder med sol og lys?", "Legger planen til rette for møteplasser og fysisk aktivitet i hverdagen?"]}, "Bolig": {"kj": ["Sikre et variert og sammensatt boligtilbud for alle innbyggere uavhengig av alder og sosioøkonomisk bakgrunn", "Fastsette bosettingsmønster i tråd med sosial og teknisk infrastruktur i kommunen", "Lokalisere utbyggingsmønster for å minimere transportbehov eller legge til rette for kollektivtransport, sykkel og gange", "Tilrettelegge for at eldre kan bo lengst mulig hjemme/i tilrettelagt bolig", "Skape et godt og trygt fysisk nærmiljø for barn og unge"], "se": ["Gir planen variasjon i boligstørrelser og boligtyper?", "Passer boligene til befolkningsutviklingen, for eksempel flere eldre?"]}, "Kultur, idrett og fritid": {"kj": ["Ivareta samisk og kvensk kultur", "Støtte og fremme aktiviteter og møteplasser som bidrar til integrering og kulturelt mangfold.", "Jobbe for varierte møteplasser og kulturtilbud", "Sikre tilgang til gode og inkluderende fritidstilbud for barn og unge", "Tilrettelegge for frivillige organisasjoner innen kultur og fritid"], "se": ["Berøres eller etableres arealer for idrett, kultur og fritid?", "Får barn og unge tilgang til arealer for uorganisert aktivitet?"]}, "Medvirkning, inkludering og likestilling": {"kj": ["Sikre tilgang til aktiv medvirkning og deltakelse i plan- og beslutningsprosesser", "Utjevne sosial ulikhet og motvirke ensomhet og utenforskap", "Fremme inkludering og likestilling uavhengig av kjønn, alder, etnisitet, funksjonsevne og sosioøkonomisk bakgrunn", "Sikre at barnerettighetsvurderinger inngår i alle beslutningsprosesser", "Ivareta universell utforming (CRPD) som prinsipp"], "se": ["Er bygg, uteområder og offentlige rom universelt utformet?", "Har berørte grupper, særlig barn og unge, fått medvirke, og er innspillene fulgt opp?", "Er offentlige rom utformet slik at de oppleves trygge?"]}, "Samfunnssikkerhet og beredskap": {"kj": ["Ha kunnskap og oversikt over risikoforhold i kommunen (ROS)", "Styrke beredskap for å håndtere uønskede hendelser", "Ha et økt fokus på forsyningssikkerhet og nødvendig infrastruktur", "Samarbeide med frivillige organisasjoner og andre etater som bidrar til samfunnsikkerhet og beredskap", "Ha fokus på trafikksikkerhet for myke trafikanter"], "se": ["Er grunnforholdene avklart, for eksempel skred og kvikkleire?", "Er trafikksikkerheten god, særlig for gående og syklende?", "Berøres samfunnskritisk infrastruktur eller sikkerhetssoner rundt risikovirksomhet?"]}, "Lokal næringsutvikling og verdiskaping": {"kj": ["Fremme samarbeid mellom næringsliv, utdanningsinstitusjoner og forskningsmiljøer for å stimulere til innovasjon og entreprenørskap", "Legge til rette for et variert næringsliv", "Tilrettelegge infrastruktur og arealer for næringsutvikling med minst mulig negativ påvirkning"], "se": ["Gir planen arealer som næringslivet faktisk har behov for?", "Kommer planen i konflikt med eksisterende næring, som landbruk, fiske eller reiseliv?"]}, "Like økonomiske muligheter": {"kj": ["Anvende økonomiske virkemidler med formål å utjevne sosiale forskjeller", "Tilrettelegge for økt sysselsetting gjennom styrking av kompetanse og tilrettelagt arbeid", "Legge til rette for ulike lavterskeltilbud", "Tilgjengelige bolig- og tjenestetilbud i nærheten av sosial og teknisk infrastruktur"], "se": ["Blir det boliger som er tilgjengelige for vanskeligstilte?", "Kan man nå arbeid og tjenester uten bil?"]}, "Kommunens økonomiske handlingsevne": {"kj": ["Forvalte den kommunale økonomien slik at den økonomiske handlingsevnen blir ivaretatt over tid (blant annet gjennom fastsetting av finansielle måltall)", "Planlegge for den demografiske utviklingen og endrede tjenestebehov", "Sørge for helhetlig økonomistyring gjennom mål, strategier og langsiktige planer", "Fokus på samarbeid, digitalisering og innovasjon i alle tjenestetilbud"], "se": ["Hvilke kostnader får kommunen til vei, vann og avløp, skole og drift?", "Er kostnadene sikret gjennom rekkefølgekrav eller utbyggingsavtale?"]}, "Forbruk og forvaltning av ressurser": {"kj": ["Ha et bevisst forbruk gjennom å tenke lang levetid, reparasjon og gjenbruk i forvaltning av ressurser", "Sikre ansvarlige anskaffelser med minst mulige negative påvirkninger for klima, miljø og samfunn", "Øke kunnskap og kompetanse om bærekraftige løsninger og gå foran som et godt eksempel", "Legge til rette for samlokalisering av tilbud, tjenester, virksomheter, og /eller samarbeid som fremmer sirkulære løsninger og redusert ressursbruk"], "se": ["Er det balanse i massene, eller må store mengder kjøres inn eller ut?", "Er gjenbruk av eksisterende bygg vurdert framfor riving?"]}};
+const AREAL_DIM_DESC = {"miljo": "handler om å beskytte, bevare og forbedre miljøet, gjennom å opprettholde naturmangfold, redusere utslipp, sikre rene vann og vassdrag, og samtidig fysisk forberede samfunnet på et fremtidig endret klima.", "sosialt": "handler om å skape robuste og rettferdige lokalsamfunn, gjennom systematisk folkehelsearbeid, fremme likestilling og trygghet for alle, og vurdere barnets beste i alle sammenheng.", "okonomi": "handler om å skape langsiktig økonomisk vekst som ikke går på bekostning av miljøet eller lokalsamfunnet, gjennom bevisst forbruk og ressursforvaltning på alle nivåer, og verdiskapning som kommer alle til gode og skaper mindre økonomisk ulikhet."};
+skjemaData["arealdel2"] = {
+  id: "arealdel2",
+  type: "impact",
+  areal: true,
+  svar_label: "Påvirkning",
+  svar_options: ["", "Negativ påvirkning", "Positiv påvirkning", "Nøytral påvirkning", "Både positiv og negativ påvirkning", "Mangler kunnskap til å vurdere påvirkning", "Ikke relevant"],
+  chart_labels: { nei: "Negativ", ja: "Positiv", noytral: "Nøytral", delvis: "Både positiv og negativ", unsure: "Mangler kunnskap", ikke: "Ikke relevant" },
+  dims: skjemaData["saksbehandling"].dims.map(d => ({
+    id: d.id,
+    name: d.name,
+    desc: AREAL_DIM_DESC[d.id] || d.desc,
+    temaer: d.temaer.map(t => ({
+      name: t.name,
+      sub: t.sub,
+      kjoreregler: (AREAL_TEMA[t.name] && AREAL_TEMA[t.name].kj) || t.kjoreregler,
+      sporsmal: (AREAL_TEMA[t.name] && AREAL_TEMA[t.name].se) || []
+    }))
+  }))
+};
+function erArealSkjema(id){ const d = skjemaData[id || activeSkjemaId]; return !!(d && d.areal); }
 
 /* ---------- EGNE TEMAER (brukerens egne rader i list-skjemaer) ---------- */
 const EGNE_KEY = "baerekraft-egne-rader-";
@@ -1441,6 +1476,7 @@ function colorClassFor(option){
   if (/^positiv/i.test(option)) return "ja";
   if (/^negativ/i.test(option)) return "nei";
   if (/^nøytral/i.test(option)) return "noytral";
+  if (/^både/i.test(option)) return "delvis";
   if (/^mangler kunnskap/i.test(option)) return "unsure";
   if (/^ja/i.test(option)) return "ja";
   if (/^delvis|^vurdert/i.test(option)) return "delvis";
@@ -1530,7 +1566,7 @@ const SKJEMA_INTRO = {
   saksbehandling: { tekst: "Beskriv saken, og vurder deretter hvert tema som positiv, negativ eller nøytral påvirkning. Svarene samles i en oppsummering til saksfremlegget, med samlet vurdering per dimensjon." },
   indikatorer: { tekst: "Her finner du indikatorer, måleenheter og kilder for hvert tema. Bruk dem som oppslag når du vurderer status i skjemaene." }
 };
-SKJEMA_INTRO.arealdel2 = SKJEMA_INTRO.arealdel;
+SKJEMA_INTRO.arealdel2 = { tekst: "Vurder planens eller enkeltområders samlede virkning. Svarene samles i en oppsummering til bruk i planbeskrivelsen eller i saksfremlegget, med samlet vurdering per dimensjon. Virkningen vurderes mot dagens situasjon (nullalternativet).", nar: SKJEMA_INTRO.arealdel.nar, ekstra: SKJEMA_INTRO.arealdel.ekstra };
 function visIkkeRelevantPopup(select){
   let m = document.getElementById("ikkerelModal");
   if (!m) {
@@ -1674,7 +1710,7 @@ function buildThemeCard(data, dim, tema){
           <div class="sub">${tema.sub || temaSubFallback(tema.name)}</div>
         </div>
       </div>
-      ${activeSkjemaId === "hop" ? "" : `<details class="indikator-block krit-block"><summary>Bærekraftskriterier</summary><ul class="kjoreregler">${tema.kjoreregler.map(k => `<li>${k}</li>`).join("")}</ul></details>`}
+      ${activeSkjemaId === "hop" ? "" : (erArealSkjema() && tema.sporsmal ? `<details class="indikator-block krit-block"><summary>Bærekraftskriterier</summary><div class="krit-grid"><div><h4>Mål for temaet</h4><ul class="kjoreregler">${tema.kjoreregler.map(k => `<li>${k}</li>`).join("")}</ul></div><div><h4>Spørsmål til planen</h4><ul class="kjoreregler krit-sporsmal">${tema.sporsmal.map(k => `<li>${k}</li>`).join("")}</ul></div><p class="krit-note">Spørsmålene skal ikke besvares hver for seg, men hjelper deg å vurdere temaet.</p></div></details>` : `<details class="indikator-block krit-block"><summary>Bærekraftskriterier</summary><ul class="kjoreregler">${tema.kjoreregler.map(k => `<li>${k}</li>`).join("")}</ul></details>`)}
     </div>
     ${metaHtml}
     ${activeSkjemaId === "planstrategi" ? "" : indikatorHtml(tema)}
@@ -1932,6 +1968,57 @@ function buildThemeCard(data, dim, tema){
 
     grid.appendChild(selWrap);
     grid.appendChild(comWrap);
+
+    if (erArealSkjema()) {
+      // Veiledning under valget, krav om begrunnelse og felt for henvisning
+      const hint = document.createElement("p");
+      hint.className = "areal-hint";
+      selWrap.appendChild(hint);
+      comLabel.innerHTML = 'Begrunnelse – hvilken kunnskap har vi? <span class="areal-pakrevd"></span>';
+      const req = document.createElement("span");
+      req.className = "areal-req";
+      req.textContent = "Begrunnelse kreves ved negativ eller blandet påvirkning.";
+      comWrap.appendChild(req);
+      const oppdater = () => {
+        const v = select.value;
+        const kreves = /^negativ|^både/i.test(v);
+        const mangler = kreves && !textarea.value.trim();
+        comLabel.querySelector(".areal-pakrevd").textContent = kreves ? "(påkrevd)" : "";
+        req.hidden = !mangler;
+        textarea.classList.toggle("areal-mangler", mangler);
+        let h = "";
+        if (/^både/i.test(v)) h = "Bruk bare når begge virkningene er vesentlige. Er den ene klart viktigst, velg den og nevn den andre i begrunnelsen. Er du usikker, velg Mangler kunnskap. Begrunn hva som er positivt, hva som er negativt, og hva som veier tyngst.";
+        else if (/^nøytral/i.test(v)) h = "Nøytral betyr at saken ikke påvirker temaet nevneverdig. Bruk ikke nøytral når positive og negative virkninger utligner hverandre – velg da Både positiv og negativ.";
+        hint.textContent = h;
+        hint.hidden = !h;
+      };
+      select.addEventListener("change", oppdater);
+      textarea.addEventListener("input", oppdater);
+      oppdater();
+
+      const henvWrap = document.createElement("div");
+      henvWrap.className = "pairfield areal-henv";
+      const henvId = "henv-" + dim.id + "-" + dim.temaer.indexOf(tema);
+      const henvLabel = document.createElement("label");
+      henvLabel.htmlFor = henvId;
+      henvLabel.textContent = "Henvisning (planbeskrivelse, KU eller ROS)";
+      const henv = document.createElement("input");
+      henv.type = "text";
+      henv.id = henvId;
+      henv.className = "areal-henv-input";
+      henv.placeholder = "F.eks. Planbeskrivelsen kap. 6.3";
+      henv.value = (state[key] && state[key].henvisning) || "";
+      henv.addEventListener("input", () => {
+        state[key] = state[key] || {};
+        state[key].henvisning = henv.value;
+        state[key].label = tema.name;
+        state[key].dim = dim.id;
+        saveState();
+      });
+      henvWrap.appendChild(henvLabel);
+      henvWrap.appendChild(henv);
+      grid.appendChild(henvWrap);
+    }
     div.appendChild(grid);
   }
 
@@ -1957,6 +2044,7 @@ function getSteps(id){
   const steps = [];
   data.dims.forEach(dim => {
     dim.temaer.forEach(t => steps.push({ type: "tema", dim: dim, tema: t }));
+    if (data.areal) steps.push({ type: "samlet", dim: dim });
   });
   if (data.type === "impact") steps.push({ type: "tvers" });
   stepsCache[id] = steps;
@@ -2135,13 +2223,15 @@ function updateStepNav(){
 function buildSamletStep(step){
   const isTvers = step.type === "tvers";
   const key = isTvers ? "__tvers__" : rowKey(step.dim.id, "__samlet__", "samlet");
-  const title = isTvers ? "Samlet vurdering (valgbar)" : "Samlet vurdering av påvirkning på " + step.dim.name;
+  const areal = erArealSkjema();
+  const title = isTvers ? (areal ? "Samlet vurdering på tvers av dimensjonene" : "Samlet vurdering (valgbar)") : (areal ? "Samlet vurdering – " + step.dim.name : "Samlet vurdering av påvirkning på " + step.dim.name);
   const div = document.createElement("div");
   div.className = "theme theme-samlet";
   div.dataset.tema = stepLabel(step);
   div.innerHTML = `<div class="theme-head"><div><h3>${escHtml(title)}</h3></div></div>`;
   const ta = document.createElement("textarea");
   ta.className = "kommentar samlet-ta";
+  if (areal && isTvers) ta.placeholder = "Hvor gir saken gevinst på flere områder, og hvor står hensyn mot hverandre?";
   ta.value = (state[key] && state[key].samlet) || "";
   ta.addEventListener("input", () => {
     state[key] = state[key] || {};
@@ -2437,6 +2527,19 @@ function renderSummary(){
       });
       body += "</tbody>";
       const samlet = state[rowKey(dim.id, "__samlet__", "samlet")];
+      if (data.areal) {
+        let abody = "<tbody>";
+        dim.temaer.forEach(t => {
+          const s = state[rowKey(dim.id, t.name, "paavirkning")] || {};
+          abody += `<tr class="sumrow">
+          <th scope="row" class="sumtema-cell"><span class="sumtema-name">${esc(t.name)}</span><button type="button" class="textbtn sumedit" data-dim="${esc(dim.id)}" data-goto-tema="${esc(t.name)}">Gå til tema →</button></th>
+          <td>${svarHtml(s.svar)}</td><td>${kommentarHtml(s.kommentar)}</td><td>${kommentarHtml(s.henvisning)}</td></tr>`;
+        });
+        abody += "</tbody>";
+        section(dim, i, [{t:"Tema", w:"24%"}, {t:data.svar_label, w:"20%"}, {t:"Begrunnelse"}, {t:"Henvisning", w:"18%"}], abody,
+          samletBlock("Samlet vurdering – " + dim.name, samlet && samlet.samlet, dim.id));
+        return;
+      }
       // Samlet vurdering per dimensjon er fjernet fra skjemaet; vis bare eldre tekst som allerede er skrevet
       section(dim, i, [{t:"Tema", w:"30%"}, {t:data.svar_label, w:"28%"}, {t:KOMMENTAR_LABEL, w:"42%"}], body,
         (samlet && samlet.samlet && samlet.samlet.trim()) ? samletBlock("Samlet vurdering av påvirkning på " + dim.name, samlet.samlet, "__tvers__") : null);
@@ -2444,7 +2547,7 @@ function renderSummary(){
     const tvers = state["__tvers__"];
     const tversWrap = document.createElement("section");
     tversWrap.className = "sumdimsec";
-    tversWrap.appendChild(samletBlock("Samlet vurdering (valgbar)", tvers && tvers.samlet, "__tvers__"));
+    tversWrap.appendChild(samletBlock(data.areal ? "Samlet vurdering på tvers av dimensjonene" : "Samlet vurdering (valgbar)", tvers && tvers.samlet, "__tvers__"));
     container.appendChild(tversWrap);
   }
 }
@@ -2816,7 +2919,8 @@ async function generatePdfReport(onlyId){
         body += `<div class="row">`;
         body += `<div class="q">${v.label || ""}</div>`;
         if (v.svar) { const ac = { ja:"#2E8B3D", delvis:"#F2B705", noytral:"#71799D", unsure:"#A9B4C2", nei:"#C90B1C", ikke:"#C9CFD6" }[colorClassFor(v.svar)] || dimColor; body += `<div class="svar"><i class="dot-pdf" style="background:${ac};"></i>Svar: ${v.svar}</div>`; }
-        if (v.kommentar) body += `<div class="kommentar">Kommentar: ${v.kommentar.replace(/</g,"&lt;")}</div>`;
+        if (v.kommentar) body += `<div class="kommentar">${skjemaData[meta.id] && skjemaData[meta.id].areal ? "Begrunnelse" : "Kommentar"}: ${v.kommentar.replace(/</g,"&lt;")}</div>`;
+        if (v.henvisning) body += `<div class="kommentar">Henvisning: ${v.henvisning.replace(/</g,"&lt;")}</div>`;
         body += `</div>`;
       });
       if (samletText) {
@@ -3079,7 +3183,7 @@ const GUIDE_NODES = {
       { label: "Kunnskapsgrunnlag", help: "Sjekk om kommunen har nødvendig informasjon for å kunne ta stilling til temaene", result: "kunnskapsgrunnlaget" },
       { label: "Planstrategi", help: "En systematisk vurdering av planbehov", result: "planstrategi" },
       { label: "Samfunnsplanlegging", help: "Vurdere gjeldende plan, revidere eller starte en ny planprosess", result: "samfunnsdel" },
-      { label: "Arealplanlegging", help: "Vurdere gjeldende plan, revidere eller starte en ny planprosess", result: "arealdel" },
+      { label: "Arealplanlegging", help: "Vurdere gjeldende plan, revidere eller starte en ny planprosess", result: "arealdel2" },
       { label: "Handlings- og økonomiplan", help: "Sikre koblingen mellom tiltak, budsjett og overordnede målsettinger", result: "hop" }
     ]
   }
@@ -3106,6 +3210,7 @@ const GUIDE_OTHER = {
   virkemidler: { name: "Praktiske hjelpemidler", desc: "Virkemiddeloversikt, dilemmatrening, plakat, sluttrapport og tips til politikerinvolvering.", button: "Åpne praktiske hjelpemidler", type: "view" }
 };
 
+GUIDE_USAGE.arealdel2 = GUIDE_USAGE.arealdel;
 function scrollGuideTop(){ window.scrollTo({ top: 0, left: 0, behavior: "instant" }); }
 
 let guideState = { node: "start", history: [], result: null };
@@ -3955,7 +4060,7 @@ const SAK_KEY = "baerekraft-sak-info";
 // Skjemaer med tittelfelt øverst (Saksbehandling og alternativ Arealplanlegging)
 const SAK_CFG = {
   saksbehandling: { key: SAK_KEY, label: "Tittel på saken", kort: "Sak", beskrivelse: true },
-  arealdel2: { key: "baerekraft-sak-info-arealdel2", label: "Plan/område i plan", kort: "Plan/område i plan", beskrivelse: false }
+  arealdel2: { key: "baerekraft-sak-info-arealdel2", label: "Tittel på saken", kort: "Sak", beskrivelse: true, placeholder: "F.eks. Detaljregulering for …" }
 };
 function sakCfg(id){ return SAK_CFG[id || activeSkjemaId] || SAK_CFG.saksbehandling; }
 function getSakInfo(id){
@@ -3985,6 +4090,7 @@ function renderSakInfo(first){
     i1.type = "text";
     i1.id = "sakTittel";
     i1.value = sak.tittel;
+    if (cfg.placeholder) i1.placeholder = cfg.placeholder;
     i1.addEventListener("input", () => saveSakInfo({ tittel: i1.value }));
     f1.appendChild(l1); f1.appendChild(i1);
     wrap.appendChild(f1);
