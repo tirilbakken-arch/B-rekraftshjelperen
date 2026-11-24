@@ -124,6 +124,14 @@
   .krit-grid .krit-sporsmal{color:var(--text);}
   .krit-note{grid-column:1 / -1;margin:4px 0 0;font-size:.85rem;color:var(--text-soft);}
   @media (max-width:720px){.krit-grid{grid-template-columns:1fr;}}
+  .fil-deling{margin-top:32px;padding:20px 22px;background:#F3F5F8;border-left:4px solid var(--green-deep);display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;}
+  .fil-deling-tekst{display:flex;flex-direction:column;gap:4px;max-width:60ch;font-size:.95rem;}
+  .fil-deling-tekst strong{color:var(--green-deep);}
+  .fil-deling-knapper{display:flex;flex-wrap:wrap;gap:10px;}
+  .fil-status{flex-basis:100%;margin:0;font-size:.9rem;color:var(--green-deep);}
+  .fil-status:empty{display:none;}
+  .fil-status.fil-feil{color:#A10916;font-weight:600;}
+  .fil-apne{margin:16px 0;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:.95rem;}
   .areal-hint{margin:8px 0 0;padding:10px 12px;background:#F3F5F8;font-size:.82rem;line-height:1.5;color:#1E2736;}
   .areal-req{margin-top:6px;font-size:13px;color:#A10916;font-weight:600;}
   .areal-pakrevd{font-weight:400;color:var(--text-soft);}
@@ -995,6 +1003,12 @@
     <div class="guide" id="guideContainer"></div>
 
     <div class="fortsett-wrap" id="fortsettWrap" hidden></div>
+    <div class="fil-apne">
+      <span>Har du fått et skjema som fil fra en kollega?</span>
+      <button type="button" class="textbtn" data-importer>Åpne skjema fra fil</button>
+      <p class="fil-status" role="status" aria-live="polite"></p>
+    </div>
+    <input type="file" id="importFil" accept=".json,application/json" hidden>
     <details class="alle-skjemaer">
       <summary>Se alle skjemaer og verktøy</summary>
 
@@ -1060,6 +1074,17 @@
     <div class="toolhead-links tool-actions">
       <button type="button" class="textbtn tour-start" id="resetStart">Start skjemaet på nytt</button>
       <button type="button" class="primarybtn save-btn" id="saveBtn">Lagre og fortsett senere</button>
+    </div>
+    <div class="fil-deling" id="filDelingTool">
+      <div class="fil-deling-tekst">
+        <strong>Jobbe sammen med andre?</strong>
+        <span>Last ned skjemaet som fil og send det til en kollega. Kollegaen åpner filen i Bærekrafthjelperen og fortsetter der du slapp.</span>
+      </div>
+      <div class="fil-deling-knapper">
+        <button type="button" class="primarybtn" id="eksporterBtn">Last ned skjema som fil</button>
+        <button type="button" class="primarybtn" data-importer>Åpne skjema fra fil</button>
+      </div>
+      <p class="fil-status" role="status" aria-live="polite"></p>
     </div>
     <div class="dim-intro-wrap" id="dimIntro"></div>
   </section>
@@ -3600,6 +3625,81 @@ document.getElementById("saveToastMin").addEventListener("click", () => {
   document.getElementById("saveToast").hidden = true;
   document.getElementById("minSideBtn").click();
 });
+
+/* ---------- DEL SKJEMA SOM FIL (eksport/import) ---------- */
+const FIL_FORMAT = "baerekrafthjelperen-skjema";
+function lesJson(key, fallback){ try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; } }
+function eksporterSkjema(id){
+  const meta = skjemaer.find(x => x.id === id);
+  if (!meta) return;
+  if (id === activeSkjemaId) saveState();
+  const egneInd = {};
+  Object.entries(lesJson(EGNE_IND_KEY, {}) || {}).forEach(([k, v]) => { if (k.indexOf(id + "|") === 0) egneInd[k] = v; });
+  const sak = SAK_CFG[id] ? lesJson(SAK_CFG[id].key, {}) : null;
+  const pakke = {
+    format: FIL_FORMAT, versjon: 1,
+    skjema: id, skjemaNavn: meta.name,
+    eksportert: new Date().toISOString(),
+    svar: lesJson("baerekraft-svar-" + id, {}),
+    sak: sak,
+    egneRader: lesJson(EGNE_KEY + id, {}),
+    egneIndikatorer: egneInd
+  };
+  const tittel = sak && (sak.tittel || "").trim();
+  const dato = new Date().toISOString().slice(0, 10);
+  const rent = (t) => t.replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, " ").trim();
+  const filnavn = rent("Bærekrafthjelperen – " + meta.name + (tittel ? " – " + rent(tittel).slice(0, 50) : "") + " – " + dato) + ".json";
+  const blob = new Blob([JSON.stringify(pakke, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filnavn;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  visFilStatus("Skjemaet er lastet ned som «" + filnavn + "». Send filen til den som skal jobbe videre.");
+}
+function visFilStatus(tekst, feil){
+  document.querySelectorAll(".fil-status").forEach(el => { el.textContent = tekst; el.classList.toggle("fil-feil", !!feil); });
+}
+function importerSkjemaTekst(tekst){
+  let pakke;
+  try { pakke = JSON.parse(tekst); } catch (e) { visFilStatus("Filen kunne ikke leses. Velg en fil som er lastet ned fra Bærekrafthjelperen.", true); return; }
+  if (!pakke || pakke.format !== FIL_FORMAT || !pakke.skjema) { visFilStatus("Dette ser ikke ut som et skjema fra Bærekrafthjelperen.", true); return; }
+  const id = pakke.skjema;
+  const meta = skjemaer.find(x => x.id === id);
+  if (!meta || !skjemaData[id]) { visFilStatus("Skjemaet i filen («" + (pakke.skjemaNavn || id) + "») finnes ikke i denne versjonen av Bærekrafthjelperen.", true); return; }
+  if (harLagretSvar(id) && !window.confirm("Du har allerede svar i " + meta.name + " i denne nettleseren. Vil du erstatte dem med innholdet i filen?\n\nTips: Last ned dine egne svar som fil først hvis du vil ta vare på dem.")) {
+    visFilStatus("Importen ble avbrutt. Svarene dine er uendret.");
+    return;
+  }
+  try {
+    nullstillSkjema(id);
+    localStorage.setItem("baerekraft-svar-" + id, JSON.stringify(pakke.svar || {}));
+    if (pakke.egneRader) localStorage.setItem(EGNE_KEY + id, JSON.stringify(pakke.egneRader));
+    if (SAK_CFG[id] && pakke.sak) localStorage.setItem(SAK_CFG[id].key, JSON.stringify(pakke.sak));
+    const alle = lesJson(EGNE_IND_KEY, {}) || {};
+    Object.keys(alle).forEach(k => { if (k.indexOf(id + "|") === 0) delete alle[k]; });
+    Object.assign(alle, pakke.egneIndikatorer || {});
+    localStorage.setItem(EGNE_IND_KEY, JSON.stringify(alle));
+  } catch (e) { visFilStatus("Skjemaet kunne ikke lagres i nettleseren.", true); return; }
+  if (typeof stepsCache !== "undefined") delete stepsCache[id];
+  if (typeof applyEgneRader === "function") applyEgneRader(id);
+  openSkjema(id);
+  const naar = pakke.eksportert ? new Date(pakke.eksportert).toLocaleString("no-NO", { dateStyle: "short", timeStyle: "short" }) : "";
+  visFilStatus(meta.name + " er åpnet fra fil" + (naar ? " (lastet ned " + naar + ")" : "") + ". Last ned skjemaet på nytt når du er ferdig, og send det tilbake.");
+  window.scrollTo(0, 0);
+}
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-importer]")) { const inp = document.getElementById("importFil"); inp.value = ""; inp.click(); }
+});
+document.getElementById("importFil").addEventListener("change", (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => importerSkjemaTekst(String(r.result || ""));
+  r.onerror = () => visFilStatus("Filen kunne ikke leses.", true);
+  r.readAsText(f, "utf-8");
+});
+document.getElementById("eksporterBtn").addEventListener("click", () => eksporterSkjema(activeSkjemaId));
 
 /* ---------- START PÅ NYTT / FORTSETT ---------- */
 function harLagretSvar(id){
