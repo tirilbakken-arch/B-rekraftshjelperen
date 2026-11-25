@@ -1735,7 +1735,7 @@ function buildThemeCard(data, dim, tema){
       ${activeSkjemaId === "hop" ? "" : (erArealSkjema() && tema.sporsmal ? `<details class="indikator-block krit-block"><summary>Bærekraftskriterier</summary><div class="krit-grid"><div><h4>Mål for temaet</h4><ul class="kjoreregler">${tema.kjoreregler.map(k => `<li>${k}</li>`).join("")}</ul></div><div><h4>Spørsmål til planen</h4><ul class="kjoreregler krit-sporsmal">${tema.sporsmal.map(k => `<li>${k}</li>`).join("")}</ul></div><p class="krit-note">Spørsmålene skal ikke besvares hver for seg, men hjelper deg å vurdere temaet.</p></div></details>` : `<details class="indikator-block krit-block"><summary>Bærekraftskriterier</summary><ul class="kjoreregler">${tema.kjoreregler.map(k => `<li>${k}</li>`).join("")}</ul></details>`)}
     </div>
     ${metaHtml}
-    ${activeSkjemaId === "planstrategi" ? "" : indikatorHtml(tema)}
+    ${["planstrategi", "samfunnsdel", "arealdel2"].includes(activeSkjemaId) ? "" : indikatorHtml(tema)}
   `;
 
   if (data.type === "list") {
