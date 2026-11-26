@@ -1214,7 +1214,7 @@
     <textarea id="fbText" rows="6" placeholder="Skriv tilbakemeldingen din her …"></textarea>
     <label for="fbName">Navn eller kommune (valgfritt)</label>
     <input type="text" id="fbName">
-    <p class="fb-note">Trykk «Send» for å åpne e-postprogrammet med tilbakemeldingen ferdig utfylt. Åpnes det ikke, trykk «Kopier tilbakemelding» og lim teksten inn i en e-post til lill.hege.nergard@statsforvalteren.no, pernille.ram@gmail.com og tiril.bakken@gmail.com.</p>
+    <p class="fb-note">Trykk «Send» for å åpne e-postprogrammet med tilbakemeldingen ferdig utfylt. Åpnes det ikke, trykk «Kopier tilbakemelding» og lim teksten inn i en e-post til lill.hege.nergard@statsforvalteren.no og tiril.bakken@gmail.com.</p>
     <p class="fb-status" id="fbStatus" role="status"></p>
     <div class="fb-actions">
       <button type="button" class="textbtn" id="fbCancel">Avbryt</button>
@@ -3807,7 +3807,7 @@ document.getElementById("resumeContinue").addEventListener("click", () => {
 document.getElementById("resumeReset").addEventListener("click", () => bekreftNullstill(activeSkjemaId));
 
 /* ---------- TILBAKEMELDING ---------- */
-const FB_TIL = ["lill.hege.nergard@statsforvalteren.no", "pernille.ram@gmail.com", "tiril.bakken@gmail.com"];
+const FB_TIL = ["lill.hege.nergard@statsforvalteren.no", "tiril.bakken@gmail.com"];
 function fbKontekst(){
   const navn = (id) => { const m = skjemaer.find(x => x.id === id); return m ? m.name : ""; };
   if (currentView === "view-tool" && activeSkjemaId) {
