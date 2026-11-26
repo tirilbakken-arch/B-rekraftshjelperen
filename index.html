@@ -1743,9 +1743,9 @@ function buildThemeCard(data, dim, tema){
     table.className = "skjema";
     table.innerHTML = `
       <thead><tr>
-        <th style="width:46%;">${data.svar_label}</th>
-        <th style="width:18%;">Svar</th>
-        <th style="width:36%;">Hvilken kunnskap har vi?</th>
+        <th style="width:40%;">${data.svar_label}</th>
+        <th style="width:14%;">Svar</th>
+        <th style="width:46%;">Hvilken kunnskap har vi?</th>
       </tr></thead>
       <tbody></tbody>
     `;
@@ -2536,7 +2536,7 @@ function renderSummary(){
         });
         body += `</tbody>`;
       });
-      section(dim, i, [{t:data.svar_label, w:"42%"}, {t:"Svar", w:"20%"}, {t:KOMMENTAR_LABEL, w:"38%"}], body);
+      section(dim, i, [{t:data.svar_label, w:"38%"}, {t:"Svar", w:"13%"}, {t:KOMMENTAR_LABEL, w:"49%"}], body);
     });
 
   } else if (data.type === "impact") {
