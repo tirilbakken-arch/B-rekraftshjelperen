@@ -2663,6 +2663,15 @@ function renderMiniChart(counts, labelOverrides){
   return `<div class="mini-chart">${rows}</div>`;
 }
 
+// Åpner oppsummeringen for et skjema direkte fra Min side
+function visOppsummeringFor(id){
+  const sist = sistLagretSteg(id);
+  openSkjema(id, { step: (sist !== null && !isNaN(sist)) ? sist : firstIncompleteStep(id) });
+  document.getElementById("resumeBanner").hidden = true;
+  renderSummary();
+  showView("view-summary");
+  window.scrollTo(0, 0);
+}
 function makeProgressCard(meta, total, answered, pct){
   const card = document.createElement("div");
   card.className = "progresscard";
@@ -2717,6 +2726,12 @@ function makeProgressCard(meta, total, answered, pct){
     pb.textContent = "Skriv ut / lagre som PDF";
     pb.addEventListener("click", () => generatePdfReport(meta.id));
     actions.insertBefore(pb, rs);
+    const sb = document.createElement("button");
+    sb.type = "button";
+    sb.className = "openlink sum-link";
+    sb.textContent = "Se oppsummering";
+    sb.addEventListener("click", () => visOppsummeringFor(meta.id));
+    actions.insertBefore(sb, pb);
   }
   card.appendChild(actions);
   return card;
